@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-# Automatic build script for polarssl
+# Automatic build script for mbedtls
 # for psl1ght, playstaion 3 open source sdk.
 #
 # Originally Created by Felix Schulze on 08.04.11.
@@ -22,7 +22,7 @@
 ###########################################################################
 # Change values here
 #
-VERSION="1.2.8"
+VERSION="3.1.0"
 #
 ###########################################################################
 #
@@ -32,20 +32,18 @@ ARCH="powerpc64"
 PLATFORM="PS3"
 
 ## Download the source code.
-wget --continue --no-check-certificate -O polarssl-${VERSION}.gpl.tgz  https://polarssl.org/download/polarssl-${VERSION}-gpl.tgz?do=yes
+wget https://github.com/ARMmbed/mbedtls/archive/refs/tags/v${VERSION}.tar.gz -O mbedtls-${VERSION}.tar.gz
 
 ## Unpack the source code.
-rm -Rf polarssl-${VERSION} && tar xfvz polarssl-${VERSION}.gpl.tgz && cd polarssl-${VERSION}/library
+rm -Rf mbedtls-${VERSION} && tar xfz mbedtls-${VERSION}.tar.gz && cd mbedtls-${VERSION}
 
 ## Patch the source code.
 echo "Patching net.c and timing.c for compatibility..."
-cat ../../../patches/polarssl-1.2.8-net.patch | patch -p1
-cat ../../../patches/polarssl-1.2.8-timing.patch | patch -p1
+cat ../../patches/mbedtls-${VERSION}.patch | patch -p1
 
-echo "Building polarssl for ${PLATFORM} ${SDKVERSION} ${ARCH}"
+echo "Building mbedtls for ${PLATFORM} ${SDKVERSION} ${ARCH}"
 
-echo "Patching Makefile..."
-sed -i.bak '4d' ${CURRENTPATH}/polarssl-${VERSION}/library/Makefile
+cd library
 
 echo "Please stand by..."
 
@@ -59,14 +57,19 @@ export NM=$PS3DEV/ppu/bin/powerpc64-ps3-elf-nm
 export CXXCPP=$PS3DEV/ppu/bin/powerpc64-ps3-elf-cpp
 export RANLIB=$PS3DEV/ppu/bin/powerpc64-ps3-elf-ranlib
 export LDFLAGS="-L$PS3DEV/ppu/powerpc64-ps3-elf/lib -L$PSL1GHT/ppu/lib -L$PS3DEV/portlibs/ppu/lib -lrt -llv2"
-export CFLAGS="-I${CURRENTPATH}/polarssl-${VERSION}/include -I$PS3DEV/ppu/powerpc64-ps3-elf/include -I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include -mcpu=cell"
+export CFLAGS="-I${CURRENTPATH}/mbedtls-${VERSION}/include -I$PS3DEV/ppu/powerpc64-ps3-elf/include -I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include -mcpu=cell -D__PSL1GHT__"
 
 echo "Build library..."
 ## Compile and install.
-${MAKE:-make}
+PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
+if [ ! -z $ret ]; then PROCS="$(sysctl -n hw.ncpu 2>/dev/null)"; fi
+${MAKE:-make} -j $PROCS
 
-cp libpolarssl.a $PS3DEV/portlibs/ppu/lib/libpolarssl.a
-cp -R ../include/polarssl $PS3DEV/portlibs/ppu/include/
-cp ../LICENSE $PS3DEV/portlibs/ppu/include/polarssl/LICENSE
+cp libmbedcrypto.a $PS3DEV/portlibs/ppu/lib/libmbedcrypto.a
+cp libmbedtls.a $PS3DEV/portlibs/ppu/lib/libmbedtls.a
+cp libmbedx509.a $PS3DEV/portlibs/ppu/lib/libmbedx509.a
+cp -R ../include/mbedtls $PS3DEV/portlibs/ppu/include/
+cp -R ../include/psa $PS3DEV/portlibs/ppu/include/
+cp ../LICENSE $PS3DEV/portlibs/ppu/include/mbedtls/LICENSE
 
 echo "Building done."
