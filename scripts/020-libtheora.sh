@@ -1,15 +1,17 @@
 #!/bin/sh -e
-# libtheora-1.1.1.sh by dhewg (dhewg@wiibrew.org)
+# libtheora.sh by dhewg (dhewg@wiibrew.org)
+
+VER=1.1.1
 
 ## Download the source code.
-wget --continue http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.bz2
+wget --continue http://downloads.xiph.org/releases/theora/libtheora-${VER}.tar.bz2
 
 ## Download an up-to-date config.guess and config.sub
 if [ ! -f config.guess ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
 if [ ! -f config.sub ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
 
 ## Unpack the source code.
-rm -Rf libtheora-1.1.1 && tar xfvj libtheora-1.1.1.tar.bz2 && cd libtheora-1.1.1
+rm -Rf libtheora-${VER} && tar xfj libtheora-${VER}.tar.bz2 && cd libtheora-${VER}
 
 ## Replace config.guess and config.sub
 cp ../config.guess ../config.sub .
@@ -24,4 +26,6 @@ PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
 ../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --disable-shared --disable-examples
 
 ## Compile and install.
-${MAKE:-make} -j4 && ${MAKE:-make} install
+PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
+if [ ! -z $ret ]; then PROCS="$(sysctl -n hw.ncpu 2>/dev/null)"; fi
+${MAKE:-make} -j $PROCS && ${MAKE:-make} install
