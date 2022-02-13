@@ -1,0 +1,420 @@
+diff -urp old/SDL_net.h new/SDL_net.h
+--- old/SDL_net.h	2016-01-03 08:57:09.000000000 +0100
++++ new/SDL_net.h	2022-02-19 10:41:45.000000000 +0100
+@@ -25,6 +25,8 @@
+ #ifndef _SDL_NET_H
+ #define _SDL_NET_H
+ 
++#define WITHOUT_SDL
++
+ #ifdef WITHOUT_SDL
+ #include <stdint.h>
+ typedef uint8_t Uint8;
+diff -urp old/SDLnet.c new/SDLnet.c
+--- old/SDLnet.c	2016-01-03 08:57:09.000000000 +0100
++++ new/SDLnet.c	2022-02-19 11:00:59.000000000 +0100
+@@ -25,6 +25,10 @@
+ #include "SDLnetsys.h"
+ #include "SDL_net.h"
+ 
++#if defined(__lv2ppu__)
++#include <net/netctl.h>
++#endif
++
+ #ifdef WITHOUT_SDL
+ #include <string.h>
+ #include <stdarg.h>
+@@ -66,7 +70,11 @@ void SDLCALL SDLNet_SetError(const char 
+ {
+     va_list argp;
+     va_start(argp, fmt);
++#ifdef WITHOUT_SDL
++    vsnprintf(errorbuf, sizeof(errorbuf), fmt, argp);
++#else
+     SDL_vsnprintf(errorbuf, sizeof(errorbuf), fmt, argp);
++#endif
+     va_end(argp);
+ #ifndef WITHOUT_SDL
+     SDL_SetError("%s", errorbuf);
+@@ -149,7 +157,11 @@ int SDLNet_ResolveHost(IPaddress *addres
+ 
+             hp = gethostbyname(host);
+             if ( hp ) {
++#ifdef WITHOUT_SDL
++                memcpy(&address->host,hp->h_addr,hp->h_length);
++#else
+                 SDL_memcpy(&address->host,hp->h_addr,hp->h_length);
++#endif
+             } else {
+                 retval = -1;
+             }
+@@ -230,7 +242,11 @@ int SDLNet_GetLocalAddresses(IPaddress *
+     DWORD dwRetVal = 0;
+     ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
+ 
++#ifdef WITHOUT_SDL
++    pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
++#else
+     pAdapterInfo = (IP_ADAPTER_INFO *) SDL_malloc(sizeof (IP_ADAPTER_INFO));
++#endif
+     if (pAdapterInfo == NULL) {
+         return 0;
+     }
+@@ -254,8 +270,25 @@ int SDLNet_GetLocalAddresses(IPaddress *
+             }
+         }
+     }
++#ifdef WITHOUT_SDL
++    free(pAdapterInfo);
++#else
+     SDL_free(pAdapterInfo);
+ #endif
++#elif defined(__lv2ppu__)
++    netCtlInit();
++    s32 connectionState;
++    netCtlGetState(&connectionState);
++    if (connectionState == NET_CTL_STATE_IPObtained) {
++        union net_ctl_info info;
++        if (netCtlGetInfo(NET_CTL_INFO_IP_ADDRESS, &info) == 0) {
++            addresses[0].host = inet_addr(info.ip_address);
++            addresses[0].port = 0;
++            ++count;
++        }
++    }
++    netCtlTerm();
++#endif
+     return count;
+ }
+ 
+diff -urp old/SDLnetTCP.c new/SDLnetTCP.c
+--- old/SDLnetTCP.c	2016-01-03 08:57:09.000000000 +0100
++++ new/SDLnetTCP.c	2022-02-19 10:57:42.000000000 +0100
+@@ -49,7 +49,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+     struct sockaddr_in sock_addr;
+ 
+     /* Allocate a TCP socket structure */
++#ifdef WITHOUT_SDL
++    sock = (TCPsocket)malloc(sizeof(*sock));
++#else
+     sock = (TCPsocket)SDL_malloc(sizeof(*sock));
++#endif
+     if ( sock == NULL ) {
+         SDLNet_SetError("Out of memory");
+         goto error_return;
+@@ -67,7 +71,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+ 
+     // #########  Connecting to remote
+ 
++#ifdef WITHOUT_SDL
++        memset(&sock_addr, 0, sizeof(sock_addr));
++#else
+         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
++#endif
+         sock_addr.sin_family = AF_INET;
+         sock_addr.sin_addr.s_addr = ip->host;
+         sock_addr.sin_port = ip->port;
+@@ -83,7 +91,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+ 
+     // ##########  Binding locally
+ 
++#ifdef WITHOUT_SDL
++        memset(&sock_addr, 0, sizeof(sock_addr));
++#else
+         SDL_memset(&sock_addr, 0, sizeof(sock_addr));
++#endif
+         sock_addr.sin_family = AF_INET;
+         sock_addr.sin_addr.s_addr = INADDR_ANY;
+         sock_addr.sin_port = ip->port;
+@@ -118,6 +130,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+             long b = 1;
+             setsockopt(sock->channel, SOL_SOCKET, SO_NONBLOCK, &b, sizeof(b));
+         }
++#elif defined(__lv2ppu__)
++        {
++            int dontblock = 1;
++            setsockopt(sock->channel, SOL_SOCKET, SO_NBIO, &dontblock, sizeof(dontblock));
++        }
+ #elif defined(O_NONBLOCK)
+         {
+             fcntl(sock->channel, F_SETFL, O_NONBLOCK);
+@@ -177,7 +194,11 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket se
+     server->ready = 0;
+ 
+     /* Allocate a TCP socket structure */
++#ifdef WITHOUT_SDL
++    sock = (TCPsocket)malloc(sizeof(*sock));
++#else
+     sock = (TCPsocket)SDL_malloc(sizeof(*sock));
++#endif
+     if ( sock == NULL ) {
+         SDLNet_SetError("Out of memory");
+         goto error_return;
+@@ -197,6 +218,11 @@ TCPsocket SDLNet_TCP_Accept(TCPsocket se
+         unsigned long mode = 0;
+         ioctlsocket (sock->channel, FIONBIO, &mode);
+     }
++#elif defined(__lv2ppu__)
++    {
++        int dontblock = 1;
++        setsockopt(sock->channel, SOL_SOCKET, SO_NBIO, &dontblock, sizeof(dontblock));
++    }
+ #elif defined(O_NONBLOCK)
+     {
+         int flags = fcntl(sock->channel, F_GETFL, 0);
+@@ -292,6 +318,10 @@ void SDLNet_TCP_Close(TCPsocket sock)
+         if ( sock->channel != INVALID_SOCKET ) {
+             closesocket(sock->channel);
+         }
++#ifdef WITHOUT_SDL
++        free(sock);
++#else
+         SDL_free(sock);
++#endif
+     }
+ }
+diff -urp old/SDLnetUDP.c new/SDLnetUDP.c
+--- old/SDLnetUDP.c	2016-01-03 08:57:09.000000000 +0100
++++ new/SDLnetUDP.c	2022-02-19 10:57:56.000000000 +0100
+@@ -55,10 +55,18 @@ extern UDPpacket *SDLNet_AllocPacket(int
+ 
+ 
+     error = 1;
++#ifdef WITHOUT_SDL
++    packet = (UDPpacket *)malloc(sizeof(*packet));
++#else
+     packet = (UDPpacket *)SDL_malloc(sizeof(*packet));
++#endif
+     if ( packet != NULL ) {
+         packet->maxlen = size;
++#ifdef WITHOUT_SDL
++        packet->data = (Uint8 *)malloc(size);
++#else
+         packet->data = (Uint8 *)SDL_malloc(size);
++#endif
+         if ( packet->data != NULL ) {
+             error = 0;
+         }
+@@ -74,9 +82,17 @@ int SDLNet_ResizePacket(UDPpacket *packe
+ {
+     Uint8 *newdata;
+ 
++#ifdef WITHOUT_SDL
++    newdata = (Uint8 *)malloc(newsize);
++#else
+     newdata = (Uint8 *)SDL_malloc(newsize);
++#endif
+     if ( newdata != NULL ) {
++#ifdef WITHOUT_SDL
++        free(packet->data);
++#else
+         SDL_free(packet->data);
++#endif
+         packet->data = newdata;
+         packet->maxlen = newsize;
+     }
+@@ -85,8 +101,13 @@ int SDLNet_ResizePacket(UDPpacket *packe
+ extern void SDLNet_FreePacket(UDPpacket *packet)
+ {
+     if ( packet ) {
++#ifdef WITHOUT_SDL
++        free(packet->data);
++        free(packet);
++#else
+         SDL_free(packet->data);
+         SDL_free(packet);
++#endif
+     }
+ }
+ 
+@@ -99,7 +120,11 @@ UDPpacket **SDLNet_AllocPacketV(int howm
+ {
+     UDPpacket **packetV;
+ 
++#ifdef WITHOUT_SDL
++    packetV = (UDPpacket **)malloc((howmany+1)*sizeof(*packetV));
++#else
+     packetV = (UDPpacket **)SDL_malloc((howmany+1)*sizeof(*packetV));
++#endif
+     if ( packetV != NULL ) {
+         int i;
+         for ( i=0; i<howmany; ++i ) {
+@@ -125,7 +150,11 @@ void SDLNet_FreePacketV(UDPpacket **pack
+         for ( i=0; packetV[i]; ++i ) {
+             SDLNet_FreePacket(packetV[i]);
+         }
++#ifdef WITHOUT_SDL
++        free(packetV);
++#else
+         SDL_free(packetV);
++#endif
+     }
+ }
+ 
+@@ -143,14 +172,22 @@ UDPsocket SDLNet_UDP_Open(Uint16 port)
+     socklen_t sock_len;
+ 
+     /* Allocate a UDP socket structure */
++#ifdef WITHOUT_SDL
++    sock = (UDPsocket)malloc(sizeof(*sock));
++#else
+     sock = (UDPsocket)SDL_malloc(sizeof(*sock));
++#endif
+     if ( sock == NULL ) {
+         SDLNet_SetError("Out of memory");
+         goto error_return;
+     }
++#ifdef WITHOUT_SDL
++    memset(sock, 0, sizeof(*sock));
++    memset(&sock_addr, 0, sizeof(sock_addr));
++#else
+     SDL_memset(sock, 0, sizeof(*sock));
+     SDL_memset(&sock_addr, 0, sizeof(sock_addr));
+-
++#endif
+     /* Open the socket */
+     sock->channel = socket(AF_INET, SOCK_DGRAM, 0);
+     if ( sock->channel == INVALID_SOCKET )
+@@ -219,12 +256,6 @@ error_return:
+ 
+ void SDLNet_UDP_SetPacketLoss(UDPsocket sock, int percent)
+ {
+-    /* FIXME: We may want this behavior to be reproducible
+-          but there isn't a portable reentrant random
+-          number generator with good randomness.
+-    */
+-    srandom(time(NULL));
+-
+     if (percent < 0) {
+         percent = 0;
+     } else if (percent > 100) {
+@@ -342,15 +373,6 @@ int SDLNet_UDP_SendV(UDPsocket sock, UDP
+     numsent = 0;
+     for ( i=0; i<npackets; ++i )
+     {
+-        /* Simulate packet loss, if desired */
+-        if (sock->packetloss) {
+-            if ((random()%100) <= sock->packetloss) {
+-                packets[i]->status = packets[i]->len;
+-                ++numsent;
+-                continue;
+-            }
+-        }
+-
+         /* if channel is < 0, then use channel specified in sock */
+ 
+         if ( packets[i]->channel < 0 )
+@@ -416,7 +438,7 @@ static int SocketReady(SOCKET sock)
+ 
+         /* Set up the mask of file descriptors */
+         FD_ZERO(&mask);
+-        FD_SET(sock, &mask);
++        FD_SET(SOCKET_FD(sock), &mask);
+ 
+         /* Set up the timeout */
+         tv.tv_sec = 0;
+@@ -518,7 +540,11 @@ extern void SDLNet_UDP_Close(UDPsocket s
+         if ( sock->channel != INVALID_SOCKET ) {
+             closesocket(sock->channel);
+         }
++#ifdef WITHOUT_SDL
++        free(sock);
++#else
+         SDL_free(sock);
++#endif
+     }
+ }
+ 
+diff -urp old/SDLnetselect.c new/SDLnetselect.c
+--- old/SDLnetselect.c	2016-01-03 08:57:09.000000000 +0100
++++ new/SDLnetselect.c	2022-02-19 10:52:36.000000000 +0100
+@@ -46,18 +46,31 @@ SDLNet_SocketSet SDLNet_AllocSocketSet(i
+     struct _SDLNet_SocketSet *set;
+     int i;
+ 
++#ifdef WITHOUT_SDL
++    set = (struct _SDLNet_SocketSet *)malloc(sizeof(*set));
++#else
+     set = (struct _SDLNet_SocketSet *)SDL_malloc(sizeof(*set));
++#endif
+     if ( set != NULL ) {
+         set->numsockets = 0;
+         set->maxsockets = maxsockets;
++#ifdef WITHOUT_SDL
++        set->sockets = (struct SDLNet_Socket **)malloc
++                    (maxsockets*sizeof(*set->sockets));
++#else
+         set->sockets = (struct SDLNet_Socket **)SDL_malloc
+                     (maxsockets*sizeof(*set->sockets));
++#endif
+         if ( set->sockets != NULL ) {
+             for ( i=0; i<maxsockets; ++i ) {
+                 set->sockets[i] = NULL;
+             }
+         } else {
++#ifdef WITHOUT_SDL
++            free(set);
++#else
+             SDL_free(set);
++#endif
+             set = NULL;
+         }
+     }
+@@ -130,7 +143,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet
+         /* Set up the mask of file descriptors */
+         FD_ZERO(&mask);
+         for ( i=set->numsockets-1; i>=0; --i ) {
+-            FD_SET(set->sockets[i]->channel, &mask);
++            FD_SET(SOCKET_FD(set->sockets[i]->channel), &mask);
+         }
+ 
+         /* Set up the timeout */
+@@ -144,7 +157,7 @@ int SDLNet_CheckSockets(SDLNet_SocketSet
+     /* Mark all file descriptors ready that have data available */
+     if ( retval > 0 ) {
+         for ( i=set->numsockets-1; i>=0; --i ) {
+-            if ( FD_ISSET(set->sockets[i]->channel, &mask) ) {
++            if ( FD_ISSET(SOCKET_FD(set->sockets[i]->channel), &mask) ) {
+                 set->sockets[i]->ready = 1;
+             }
+         }
+@@ -156,8 +169,13 @@ int SDLNet_CheckSockets(SDLNet_SocketSet
+ extern void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
+ {
+     if ( set ) {
++#ifdef WITHOUT_SDL
++        free(set->sockets);
++        free(set);
++#else
+         SDL_free(set->sockets);
+         SDL_free(set);
++#endif
+     }
+ }
+ 
+diff -urp old/SDLnetsys.h new/SDLnetsys.h
+--- old/SDLnetsys.h	2016-01-03 08:57:09.000000000 +0100
++++ new/SDLnetsys.h	2022-02-19 10:44:30.000000000 +0100
+@@ -49,17 +49,22 @@ typedef int socklen_t;
+ #ifdef __FreeBSD__
+ #include <sys/socket.h>
+ #endif
++/* There is no sys/ioctl.h, or net/if.h for our toolchain */
++#ifndef __lv2ppu__
+ #include <sys/ioctl.h>
++#include <net/if.h>
++#endif
+ #include <sys/time.h>
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <netinet/in.h>
++#include <netinet/tcp.h>
+ #ifndef __BEOS__
+ #include <arpa/inet.h>
+ #endif
+ #include <netinet/tcp.h>
+ #include <sys/socket.h>
+-#include <net/if.h>
++#include <sys/select.h>
+ #include <netdb.h>
+ #endif /* WIN32 */
+ 
