@@ -1,15 +1,17 @@
 #!/bin/sh -e
-# libpng-1.4.4.sh by Naomi Peori (naomi@peori.ca)
+# libpng.sh by Naomi Peori (naomi@peori.ca)
+
+VER=1.6.37
 
 ## Download the source code.
-wget --continue http://download.sourceforge.net/libpng/libpng-1.4.4.tar.gz
+if [ ! -f libpng-${VER}.tar.gz ]; then wget --continue http://download.sourceforge.net/libpng/libpng-${VER}.tar.gz; fi
 
 ## Download an up-to-date config.guess and config.sub
 if [ ! -f config.guess ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
 if [ ! -f config.sub ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
 
 ## Unpack the source code.
-rm -Rf libpng-1.4.4 && tar xfvz libpng-1.4.4.tar.gz && cd libpng-1.4.4
+rm -Rf libpng-${VER} && tar xfz libpng-${VER}.tar.gz && cd libpng-${VER}
 
 ## Replace config.guess and config.sub
 cp ../config.guess ../config.sub .
@@ -25,4 +27,6 @@ PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
 ../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --enable-static --disable-shared
 
 ## Compile and install.
-${MAKE:-make} -j4 && ${MAKE:-make} install
+PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
+if [ ! -z $ret ]; then PROCS="$(sysctl -n hw.ncpu 2>/dev/null)"; fi
+${MAKE:-make} -j $PROCS && ${MAKE:-make} install
