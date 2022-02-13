@@ -1,15 +1,17 @@
 #!/bin/sh -e
-# libmad-0.15.1b.sh by dhewg (dhewg@wiibrew.org)
+# libmad.sh by dhewg (dhewg@wiibrew.org)
+
+VER=0.15.1b
 
 ## Download the source code.
-wget --continue http://downloads.sourceforge.net/project/mad/libmad/0.15.1b/libmad-0.15.1b.tar.gz
+wget --continue ftp://ftp.mars.org/pub/mpeg/libmad-${VER}.tar.gz
 
 ## Download an up-to-date config.guess and config.sub
 if [ ! -f config.guess ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
 if [ ! -f config.sub ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
 
 ## Unpack the source code.
-rm -Rf libmad-0.15.1b && tar xfvz libmad-0.15.1b.tar.gz && cd libmad-0.15.1b
+rm -Rf libmad-${VER} && tar xfz libmad-${VER}.tar.gz && cd libmad-${VER}
 
 ## Replace config.guess and config.sub
 cp ../config.guess ../config.sub .
@@ -24,4 +26,6 @@ PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
 ../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --disable-shared
 
 ## Compile and install.
-${MAKE:-make} -j4 && ${MAKE:-make} install
+PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
+if [ ! -z $ret ]; then PROCS="$(sysctl -n hw.ncpu 2>/dev/null)"; fi
+${MAKE:-make} -j $PROCS && ${MAKE:-make} install
