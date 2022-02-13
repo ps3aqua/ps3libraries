@@ -1,11 +1,13 @@
 #!/bin/sh -e
-# zlib-1.2.11.sh by Naomi Peori (naomi@peori.ca)
+# zlib.sh by Naomi Peori (naomi@peori.ca)
+
+VER=1.2.11
 
 ## Download the source code.
 wget --continue http://zlib.net/zlib-1.2.11.tar.gz
 
 ## Unpack the source code.
-rm -Rf zlib-1.2.11 && tar xfvz zlib-1.2.11.tar.gz && cd zlib-1.2.11
+rm -Rf zlib-1.2.11 && tar xfz zlib-1.2.11.tar.gz && cd zlib-1.2.11
 
 ## Patch the source code.
 cat ../../patches/zlib-1.2.11-PPU.patch | patch -p1
@@ -15,4 +17,6 @@ AR="powerpc64-ps3-elf-ar" CC="powerpc64-ps3-elf-gcc" RANLIB="powerpc64-ps3-elf-r
 ./configure --prefix="$PS3DEV/portlibs/ppu" --static
 
 ## Compile and install.
-${MAKE:-make} -j4 && ${MAKE:-make} install
+PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
+if [ ! -z $ret ]; then PROCS="$(sysctl -n hw.ncpu 2>/dev/null)"; fi
+${MAKE:-make} -j $PROCS && ${MAKE:-make} install
