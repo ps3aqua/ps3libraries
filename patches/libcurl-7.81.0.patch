@@ -1,0 +1,118 @@
+diff -urp old/lib/multi.c new/lib/multi.c
+--- old/lib/multi.c	2022-01-03 17:36:46.000000000 +0100
++++ new/lib/multi.c	2022-02-11 15:38:15.000000000 +0100
+@@ -1093,14 +1093,14 @@ CURLMcode curl_multi_fdset(struct Curl_m
+         if(!FDSET_SOCK(sockbunch[i]))
+           /* pretend it doesn't exist */
+           continue;
+-        FD_SET(sockbunch[i], read_fd_set);
++        FD_SET(SOCKET_FD(sockbunch[i]), read_fd_set);
+         s = sockbunch[i];
+       }
+       if((bitmap & GETSOCK_WRITESOCK(i)) && VALID_SOCK(sockbunch[i])) {
+         if(!FDSET_SOCK(sockbunch[i]))
+           /* pretend it doesn't exist */
+           continue;
+-        FD_SET(sockbunch[i], write_fd_set);
++        FD_SET(SOCKET_FD(sockbunch[i]), write_fd_set);
+         s = sockbunch[i];
+       }
+       if(s == CURL_SOCKET_BAD)
+diff -urp old/lib/nonblock.c new/lib/nonblock.c
+--- old/lib/nonblock.c	2022-02-11 21:59:20.000000000 +0100
++++ new/lib/nonblock.c	2022-02-11 22:01:34.000000000 +0100
+@@ -47,7 +47,12 @@
+ int curlx_nonblock(curl_socket_t sockfd,    /* operate on this */
+                    int nonblock   /* TRUE or FALSE */)
+ {
+-#if defined(HAVE_FCNTL_O_NONBLOCK)
++#if defined(__lv2ppu__)
++
++  int b = nonblock ? 1L : 0L;
++  return setsockopt(sockfd, SOL_SOCKET, SO_NBIO, &b, sizeof(b));
++
++#elif defined(HAVE_FCNTL_O_NONBLOCK)
+   /* most recent unix versions */
+   int flags;
+   flags = sfcntl(sockfd, F_GETFL, 0);
+diff -urp old/lib/select.c new/lib/select.c
+--- old/lib/select.c	2021-12-10 08:40:37.000000000 +0100
++++ new/lib/select.c	2022-02-11 15:37:53.000000000 +0100
+@@ -401,11 +401,11 @@ int Curl_poll(struct pollfd ufds[], unsi
+       if(ufds[i].fd > maxfd)
+         maxfd = ufds[i].fd;
+       if(ufds[i].events & (POLLRDNORM|POLLIN))
+-        FD_SET(ufds[i].fd, &fds_read);
++        FD_SET(SOCKET_FD(ufds[i].fd), &fds_read);
+       if(ufds[i].events & (POLLWRNORM|POLLOUT))
+-        FD_SET(ufds[i].fd, &fds_write);
++        FD_SET(SOCKET_FD(ufds[i].fd), &fds_write);
+       if(ufds[i].events & (POLLRDBAND|POLLPRI))
+-        FD_SET(ufds[i].fd, &fds_err);
++        FD_SET(SOCKET_FD(ufds[i].fd), &fds_err);
+     }
+   }
+ 
+@@ -424,19 +424,19 @@ int Curl_poll(struct pollfd ufds[], unsi
+     ufds[i].revents = 0;
+     if(ufds[i].fd == CURL_SOCKET_BAD)
+       continue;
+-    if(FD_ISSET(ufds[i].fd, &fds_read)) {
++    if(FD_ISSET(SOCKET_FD(ufds[i].fd), &fds_read)) {
+       if(ufds[i].events & POLLRDNORM)
+         ufds[i].revents |= POLLRDNORM;
+       if(ufds[i].events & POLLIN)
+         ufds[i].revents |= POLLIN;
+     }
+-    if(FD_ISSET(ufds[i].fd, &fds_write)) {
++    if(FD_ISSET(SOCKET_FD(ufds[i].fd), &fds_write)) {
+       if(ufds[i].events & POLLWRNORM)
+         ufds[i].revents |= POLLWRNORM;
+       if(ufds[i].events & POLLOUT)
+         ufds[i].revents |= POLLOUT;
+     }
+-    if(FD_ISSET(ufds[i].fd, &fds_err)) {
++    if(FD_ISSET(SOCKET_FD(ufds[i].fd), &fds_err)) {
+       if(ufds[i].events & POLLRDBAND)
+         ufds[i].revents |= POLLRDBAND;
+       if(ufds[i].events & POLLPRI)
+diff -urp old/lib/select.h new/lib/select.h
+--- old/lib/select.h	2021-12-10 08:40:37.000000000 +0100
++++ new/lib/select.h	2022-02-11 15:38:29.000000000 +0100
+@@ -111,7 +111,7 @@ int tpf_select_libcurl(int maxfds, fd_se
+ #define VALID_SOCK(s) ((s) >= 0)
+ 
+ /* If the socket is small enough to get set or read from an fdset */
+-#define FDSET_SOCK(s) ((s) < FD_SETSIZE)
++#define FDSET_SOCK(s) ((SOCKET_FD(s)) < FD_SETSIZE)
+ 
+ #define VERIFY_SOCK(x) do {                     \
+     if(!VALID_SOCK(x) || !FDSET_SOCK(x)) {      \
+diff -urp old/lib/vtls/mbedtls.c new/lib/vtls/mbedtls.c
+--- old/lib/vtls/mbedtls.c	2022-01-03 17:36:46.000000000 +0100
++++ new/lib/vtls/mbedtls.c	2022-02-11 15:14:34.000000000 +0100
+@@ -470,11 +470,6 @@ mbed_connect_step1(struct Curl_easy *dat
+ 
+   mbedtls_ssl_config_init(&backend->config);
+ 
+-  mbedtls_ssl_init(&backend->ssl);
+-  if(mbedtls_ssl_setup(&backend->ssl, &backend->config)) {
+-    failf(data, "mbedTLS: ssl_init failed");
+-    return CURLE_SSL_CONNECT_ERROR;
+-  }
+   ret = mbedtls_ssl_config_defaults(&backend->config,
+                                     MBEDTLS_SSL_IS_CLIENT,
+                                     MBEDTLS_SSL_TRANSPORT_STREAM,
+@@ -484,6 +479,12 @@ mbed_connect_step1(struct Curl_easy *dat
+     return CURLE_SSL_CONNECT_ERROR;
+   }
+ 
++  mbedtls_ssl_init(&backend->ssl);
++  if(mbedtls_ssl_setup(&backend->ssl, &backend->config)) {
++    failf(data, "mbedTLS: ssl_init failed");
++    return CURLE_SSL_CONNECT_ERROR;
++  }
++
+   /* new profile with RSA min key len = 1024 ... */
+   mbedtls_ssl_conf_cert_profile(&backend->config,
+                                 &mbedtls_x509_crt_profile_fr);
