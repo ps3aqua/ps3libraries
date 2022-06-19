@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # sdl2_psl1ght.sh by Naomi Peori (naomi@peori.ca)
 
-SDL2_PSL1GHT_VERSION=${SDL2_PSL1GHT_VERSION:="8eced77f03cc0e753285a577274582964cbc98d6"}
+SDL2_PSL1GHT_VERSION=${SDL2_PSL1GHT_VERSION:="1f7cb0f3f9cf2834fd72cc74581ba657402b456c"}
 
 ## Download the source code.
 wget "https://github.com/ps3aqua/SDL2_PSL1GHT/archive/${SDL2_PSL1GHT_VERSION}.tar.gz" -O sdl2_psl1ght-${SDL2_PSL1GHT_VERSION}.tar.gz
