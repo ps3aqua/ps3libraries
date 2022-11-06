@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # zlib.sh by Naomi Peori (naomi@peori.ca)
 
-VER=1.2.12
+VER=1.2.13
 
 ## Download the source code.
 wget --continue https://www.zlib.net/fossils/zlib-${VER}.tar.gz
