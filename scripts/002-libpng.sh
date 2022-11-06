@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # libpng.sh by Naomi Peori (naomi@peori.ca)
 
-VER=1.6.37
+VER=1.6.38
 
 ## Download the source code.
 if [ ! -f libpng-${VER}.tar.gz ]; then wget --continue http://download.sourceforge.net/libpng/libpng-${VER}.tar.gz; fi
