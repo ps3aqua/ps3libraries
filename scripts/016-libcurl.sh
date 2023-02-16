@@ -2,7 +2,7 @@
 # libcurl.sh by KaKaRoTo
 # modified by mhaqs for 7.41.0 release and cpp compatibility
 
-VER=7.83.1
+VER=7.88.0
 
 ## Download the source code.
 wget --continue http://curl.haxx.se/download/curl-${VER}.tar.gz
@@ -35,7 +35,7 @@ AR="ppu-ar" CC="ppu-gcc" RANLIB="ppu-ranlib" \
   PKG_CONFIG_LIBDIR="$PSL1GHT/ppu/lib/pkgconfig" PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
      ../configure   --prefix="$PS3DEV/portlibs/ppu"  --host="powerpc64-ps3-elf"  \
           --includedir="$PS3DEV/portlibs/ppu/include"   --libdir="$PS3DEV/portlibs/ppu/lib" \
-          --without-ssl --with-polarssl="$PS3DEV/portlibs/ppu/include/polarssl" \
+          --with-mbedtls="$PS3DEV/portlibs/ppu/include/mbedtls" \
           --with-ca-bundle="/usr/ssl/certs/ca-bundle.crt" --disable-threaded-resolver \
           --disable-ipv6 --with-mbedtls --disable-ntlm-wb
 
