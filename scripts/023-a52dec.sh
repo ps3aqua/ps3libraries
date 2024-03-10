@@ -3,7 +3,7 @@
 VER=0.7.4
 
 ## Download the source code.
-wget --continue https://liba52.sourceforge.io/files/a52dec-${VER}.tar.gz
+wget --continue http://deb.debian.org/debian/pool/main/a/a52dec/a52dec_${VER}.orig.tar.gz -O a52dec-${VER}.tar.gz
 
 ## Download an up-to-date config.guess and config.sub
 if [ ! -f config.guess ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
