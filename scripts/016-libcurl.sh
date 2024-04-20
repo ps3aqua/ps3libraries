@@ -1,8 +1,8 @@
 #!/bin/sh -e
 # libcurl.sh by KaKaRoTo
-# modified by mhaqs for 7.41.0 release and cpp compatibility
+# modified by mhaqs
 
-VER=7.88.0
+VER=8.7.1
 
 ## Download the source code.
 wget --continue http://curl.haxx.se/download/curl-${VER}.tar.gz
