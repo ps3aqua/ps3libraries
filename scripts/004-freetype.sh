@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # freetype.sh by Naomi Peori (naomi@peori.ca)
 
-VER=2.13.0
+VER=2.13.2
 
 ## Download the source code.
 wget --continue https://download.savannah.gnu.org/releases/freetype/freetype-${VER}.tar.gz
