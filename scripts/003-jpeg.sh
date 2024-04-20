@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # jpeg.sh by Naomi Peori (naomi@peori.ca)
 
-VER=9e
+VER=9f
 
 ## Download the source code.
 wget --continue http://www.ijg.org/files/jpegsrc.v${VER}.tar.gz
