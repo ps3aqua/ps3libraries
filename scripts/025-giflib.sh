@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-VER=5.2.1
+VER=5.2.2
 
 ## Download the source code.
 if [ ! -f giflib-${VER}.tar.gz ]; then wget --continue http://download.sourceforge.net/giflib/giflib-${VER}.tar.gz; fi
