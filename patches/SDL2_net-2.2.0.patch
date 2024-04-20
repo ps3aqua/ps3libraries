@@ -10,6 +10,56 @@ diff -urp old/SDL_net.h new/SDL_net.h
  #ifdef WITHOUT_SDL
  #include <stdint.h>
  typedef uint8_t Uint8;
+@@ -36,6 +38,16 @@ typedef struct SDLNet_version {
+     Uint8 minor;
+     Uint8 patch;
+ } SDLNet_version;
++
++#ifndef DECLSPEC
++#define DECLSPEC
++#endif
++#ifndef SDLCALL
++#define SDLCALL
++#endif
++#ifndef SDL_FORCE_INLINE
++#define SDL_FORCE_INLINE __attribute__((always_inline)) static __inline__
++#endif
+ 
+ #else /* WITHOUT_SDL */
+ 
+@@ -44,10 +50,10 @@ typedef SDL_version SDLNet_version;
+ #include "SDL_version.h"
+ 
+ typedef SDL_version SDLNet_version;
+-
+-#endif /* WITHOUT_SDL */
+ 
+ #include "begin_code.h"
++
++#endif /* WITHOUT_SDL */
+ 
+ /* Set up for C function definitions, even when using C++ */
+ #ifdef __cplusplus
+@@ -347,7 +353,7 @@ SDL_FORCE_INLINE int _SDLNet_SocketReady(SDLNet_Generi
+ #define SDLNet_SocketReady(sock) _SDLNet_SocketReady((SDLNet_GenericSocket)(sock))
+ SDL_FORCE_INLINE int _SDLNet_SocketReady(SDLNet_GenericSocket sock)
+ {
+-    return (sock != NULL) && (sock->ready);
++    return (sock != 0) && (sock->ready);
+ }
+ 
+ /* Free a set of sockets allocated by SDL_NetAllocSocketSet() */
+@@ -438,6 +444,9 @@ SDL_FORCE_INLINE Uint32 _SDLNet_Read32(const void *are
+ #ifdef __cplusplus
+ }
+ #endif
++
++#ifndef WITHOUT_SDL
+ #include "close_code.h"
++#endif
+ 
+ #endif /* _SDL_NET_H */
+ 
 diff -urp old/SDLnet.c new/SDLnet.c
 --- old/SDLnet.c	2016-01-03 08:57:09.000000000 +0100
 +++ new/SDLnet.c	2022-02-19 11:00:59.000000000 +0100
@@ -102,9 +152,9 @@ diff -urp old/SDLnetTCP.c new/SDLnetTCP.c
          SDLNet_SetError("Out of memory");
          goto error_return;
 @@ -67,7 +71,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+     if ( (ip->host != INADDR_NONE) && (ip->host != INADDR_ANY) ) {
  
-     // #########  Connecting to remote
- 
+     /* #########  Connecting to remote */
 +#ifdef WITHOUT_SDL
 +        memset(&sock_addr, 0, sizeof(sock_addr));
 +#else
@@ -114,9 +164,9 @@ diff -urp old/SDLnetTCP.c new/SDLnetTCP.c
          sock_addr.sin_addr.s_addr = ip->host;
          sock_addr.sin_port = ip->port;
 @@ -83,7 +91,11 @@ TCPsocket SDLNet_TCP_Open(IPaddress *ip)
+     } else {
  
-     // ##########  Binding locally
- 
+     /* ##########  Binding locally */
 +#ifdef WITHOUT_SDL
 +        memset(&sock_addr, 0, sizeof(sock_addr));
 +#else

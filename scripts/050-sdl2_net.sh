@@ -1,7 +1,7 @@
 #!/bin/sh
 # SDL2_NET.sh by unknown (Updated by Spork Schivago)
 
-SDL2_NET="SDL2_net-2.0.1"
+SDL2_NET="SDL2_net-2.2.0"
 
 ## Download the source code.
 if [ ! -f ${SDL2_NET}.tar.gz ]; then
@@ -25,10 +25,10 @@ CPPFLAGS="-I${PSL1GHT}/ppu/include" \
 CFLAGS="-I${PSL1GHT}/ppu/include" \
 LDFLAGS="-L${PSL1GHT}/ppu/lib -lnet -lnetctl -lsysmodule" \
 ../configure --prefix="$PS3DEV/portlibs/ppu" --host=powerpc64-ps3-elf \
-	--with-sdl-exec-prefix="$PS3DEV/portlibs/ppu" \
+	--with-sdl-exec-prefix="/no/path" \
 	--disable-sdltest \
-	--disable-shared \
-	--disable-gui
+	--disable-examples \
+	--disable-shared
 
 ## Compile and install.
 PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
