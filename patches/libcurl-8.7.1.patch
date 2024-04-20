@@ -1,23 +1,18 @@
 diff -urp old/lib/multi.c new/lib/multi.c
 --- old/lib/multi.c	2022-01-03 17:36:46.000000000 +0100
 +++ new/lib/multi.c	2022-02-11 15:38:15.000000000 +0100
-@@ -1093,14 +1093,14 @@ CURLMcode curl_multi_fdset(struct Curl_m
-         if(!FDSET_SOCK(sockbunch[i]))
-           /* pretend it doesn't exist */
-           continue;
--        FD_SET(sockbunch[i], read_fd_set);
-+        FD_SET(SOCKET_FD(sockbunch[i]), read_fd_set);
-         s = sockbunch[i];
-       }
-       if((bitmap & GETSOCK_WRITESOCK(i)) && VALID_SOCK(sockbunch[i])) {
-         if(!FDSET_SOCK(sockbunch[i]))
-           /* pretend it doesn't exist */
-           continue;
--        FD_SET(sockbunch[i], write_fd_set);
-+        FD_SET(SOCKET_FD(sockbunch[i]), write_fd_set);
-         s = sockbunch[i];
-       }
-       if(s == CURL_SOCKET_BAD)
+@@ -1093,9 +1093,9 @@ CURLMcode curl_multi_fdset(struct Curl_m
+         /* pretend it doesn't exist */
+         continue;
+       if(ps.actions[i] & CURL_POLL_IN)
+-        FD_SET(ps.sockets[i], read_fd_set);
++        FD_SET(SOCKET_FD(ps.sockets[i]), read_fd_set);
+       if(ps.actions[i] & CURL_POLL_OUT)
+-        FD_SET(ps.sockets[i], write_fd_set);
++        FD_SET(SOCKET_FD(ps.sockets[i]), write_fd_set);
+       if((int)ps.sockets[i] > this_max_fd)
+         this_max_fd = (int)ps.sockets[i];
+     }
 diff -urp old/lib/nonblock.c new/lib/nonblock.c
 --- old/lib/nonblock.c	2022-02-11 21:59:20.000000000 +0100
 +++ new/lib/nonblock.c	2022-02-11 22:01:34.000000000 +0100
