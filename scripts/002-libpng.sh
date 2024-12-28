@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # libpng.sh by Naomi Peori (naomi@peori.ca)
 
-VER=1.6.43
+VER=1.6.44
 
 ## Download the source code.
 if [ ! -f libpng-${VER}.tar.gz ]; then wget --continue http://download.sourceforge.net/libpng/libpng-${VER}.tar.gz; fi
@@ -24,7 +24,11 @@ CFLAGS="-I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include" \
 CPPFLAGS="-I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include" \
 LDFLAGS="-L$PSL1GHT/ppu/lib -L$PS3DEV/portlibs/ppu/lib -lrt -llv2" \
 PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
-../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --enable-static --disable-shared
+../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" \
+  --enable-static \
+  --disable-shared \
+  --disable-tests \
+  --disable-tools
 
 ## Compile and install.
 PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
