@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-VER=1.14.0
+VER=1.15.0
 
 ## Download the source code.
 wget --continue https://github.com/webmproject/libvpx/archive/v${VER}/libvpx-${VER}.tar.gz
