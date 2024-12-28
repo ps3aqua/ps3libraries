@@ -23,8 +23,17 @@ CFLAGS="-I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include" \
 LDFLAGS="-L$PSL1GHT/ppu/lib -L$PS3DEV/portlibs/ppu/lib -lrt -llv2" \
 PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
 CROSS=powerpc64-ps3-elf- \
-../configure --prefix="$PS3DEV/portlibs/ppu" --target=generic-gnu --disable-shared --disable-multithread \
---disable-examples --disable-tools --disable-docs
+../configure \
+  --prefix="$PS3DEV/portlibs/ppu" \
+  --target=generic-gnu \
+  --disable-shared \
+  --disable-multithread \
+  --disable-examples \
+  --disable-tools \
+  --disable-docs \
+  --disable-spatial-resampling \
+  --disable-vp9 \
+  --disable-vp8-encoder
 
 ## Compile and install.
 PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
