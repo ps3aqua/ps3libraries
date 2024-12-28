@@ -23,7 +23,16 @@ mkdir build-ppu && cd build-ppu
 CFLAGS="-I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include" \
 LDFLAGS="-L$PSL1GHT/ppu/lib -L$PS3DEV/portlibs/ppu/lib -lrt -llv2" \
 PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
-../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --disable-shared --enable-altivec --disable-xmms-plugin --disable-ogg --disable-oggtest
+../configure \
+  --prefix="$PS3DEV/portlibs/ppu" \
+  --host="powerpc64-ps3-elf" \
+  --disable-shared \
+  --enable-altivec \
+  --disable-xmms-plugin \
+  --disable-cpplibs \
+  --disable-ogg \
+  --disable-oggtest \
+  --disable-doxygen-docs
 
 ## Compile (only parts to prevent failures in unrequired parts) and install.
 PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
