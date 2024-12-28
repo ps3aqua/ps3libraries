@@ -13,6 +13,8 @@ if [ ! -f config.sub ]; then wget --continue http://git.savannah.gnu.org/cgit/co
 ## Unpack the source code.
 rm -Rf freetype-${VER} && tar xfz freetype-${VER}.tar.gz && cd freetype-${VER}
 
+patch -p1 < ../../patches/freetype-${VER}.patch
+
 ## Replace config.guess and config.sub
 cp ../config.guess ../config.sub builds/unix/
 
@@ -26,7 +28,16 @@ which gmake 1>/dev/null 2>&1 && MAKE=gmake
 CFLAGS="-I$PSL1GHT/ppu/include -I$PS3DEV/portlibs/ppu/include" \
 LDFLAGS="-L$PSL1GHT/ppu/lib -L$PS3DEV/portlibs/ppu/lib -lrt -llv2" \
 PKG_CONFIG_PATH="$PS3DEV/portlibs/ppu/lib/pkgconfig" \
-GNUMAKE=$MAKE ../configure --prefix="$PS3DEV/portlibs/ppu" --host="powerpc64-ps3-elf" --disable-shared --with-brotli=no --with-harfbuzz=no
+GNUMAKE=$MAKE ../configure \
+  --prefix="$PS3DEV/portlibs/ppu" \
+  --host="powerpc64-ps3-elf" \
+  --disable-shared \
+  --with-brotli=no \
+  --with-harfbuzz=no \
+  --with-bzip2=no \
+  --with-zlib=yes \
+  --with-png=no \
+  --with-librsvg=no
 
 ## Compile and install.
 PROCS="$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)" || ret=$?
