@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-VER=1.0.13
+VER=1.0.16
 
 ## Download the source code.
 wget --continue https://github.com/fribidi/fribidi/releases/download/v${VER}/fribidi-${VER}.tar.xz
