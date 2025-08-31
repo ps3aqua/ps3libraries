@@ -7,8 +7,8 @@ VER=0.15.1b
 wget --continue ftp://ftp.mars.org/pub/mpeg/libmad-${VER}.tar.gz
 
 ## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue http://git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
+if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
+if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
 
 ## Unpack the source code.
 rm -Rf libmad-${VER} && tar xfz libmad-${VER}.tar.gz && cd libmad-${VER}
