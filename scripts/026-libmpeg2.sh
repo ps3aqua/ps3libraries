@@ -3,14 +3,14 @@
 VER=0.5.1
 
 ## Download the source code.
-if [ ! -f libmpeg2-${VER}.tar.gz ]; then wget --continue https://libmpeg2.sourceforge.io/files/libmpeg2-${VER}.tar.gz; fi
+if [ ! -f mpeg2dec_${VER}.orig.tar.gz ]; then wget --continue http://deb.debian.org/debian/pool/main/m/mpeg2dec/mpeg2dec_${VER}.orig.tar.gz; fi
 
 ## Download an up-to-date config.guess and config.sub
 if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
 if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
 
 ## Unpack the source code.
-rm -Rf libmpeg2-${VER} && tar xfz libmpeg2-${VER}.tar.gz && cd libmpeg2-${VER}
+rm -Rf libmpeg2-${VER} && tar xfz mpeg2dec_${VER}.orig.tar.gz && cd libmpeg2-${VER}
 
 ## Replace config.guess and config.sub
 cp ../config.guess ../config.sub .
