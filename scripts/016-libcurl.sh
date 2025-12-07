@@ -10,15 +10,11 @@ wget --continue http://curl.haxx.se/download/curl-${VER}.tar.gz
 wget https://curl.haxx.se/ca/cacert.pem
 mv cacert.pem $PSL1GHT/
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf curl-${VER} && tar xfz curl-${VER}.tar.gz && cd curl-${VER}
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub .
+cp ../../assets/config.guess ../../assets/config.sub .
 
 ## Patch the source code.
 cat ../../patches/libcurl-${VER}.patch | patch -p1

@@ -5,15 +5,11 @@ VER=0.7.4
 ## Download the source code.
 wget --continue http://deb.debian.org/debian/pool/main/a/a52dec/a52dec_${VER}.orig.tar.gz -O a52dec-${VER}.tar.gz
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf a52dec-${VER} && tar xfz a52dec-${VER}.tar.gz && cd a52dec-${VER}
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub .
+cp ../../assets/config.guess ../../assets/config.sub .
 
 autoreconf -fi
 
