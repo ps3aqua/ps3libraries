@@ -6,15 +6,11 @@ VER=1.6.44
 ## Download the source code.
 if [ ! -f libpng-${VER}.tar.gz ]; then wget --continue http://download.sourceforge.net/libpng/libpng-${VER}.tar.gz; fi
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf libpng-${VER} && tar xfz libpng-${VER}.tar.gz && cd libpng-${VER}
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub .
+cp ../../assets/config.guess ../../assets/config.sub .
 
 ## Create the build directory.
 mkdir build-ppu && cd build-ppu

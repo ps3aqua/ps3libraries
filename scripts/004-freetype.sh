@@ -6,17 +6,13 @@ VER=2.13.3
 ## Download the source code.
 wget --continue https://download.savannah.gnu.org/releases/freetype/freetype-${VER}.tar.gz
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf freetype-${VER} && tar xfz freetype-${VER}.tar.gz && cd freetype-${VER}
 
 patch -p1 < ../../patches/freetype-${VER}.patch
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub builds/unix/
+cp ../../assets/config.guess ../../assets/config.sub builds/unix/
 
 ## Create the build directory.
 mkdir build-ppu && cd build-ppu
