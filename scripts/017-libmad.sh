@@ -6,15 +6,11 @@ VER=0.15.1b
 ## Download the source code.
 wget --continue ftp://ftp.mars.org/pub/mpeg/libmad-${VER}.tar.gz
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf libmad-${VER} && tar xfz libmad-${VER}.tar.gz && cd libmad-${VER}
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub .
+cp ../../assets/config.guess ../../assets/config.sub .
 
 ## Create the build directory.
 mkdir build-ppu && cd build-ppu

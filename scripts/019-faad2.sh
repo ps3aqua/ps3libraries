@@ -4,15 +4,11 @@
 ## Download the source code.
 wget --continue https://github.com/knik0/faad2/archive/refs/tags/2_10_0.tar.gz -O faad2-2.10.tar.gz
 
-## Download an up-to-date config.guess and config.sub
-if [ ! -f config.guess ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess; fi
-if [ ! -f config.sub ]; then wget --continue https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub; fi
-
 ## Unpack the source code.
 rm -Rf faad2-2.10 && tar xfz faad2-2.10.tar.gz && cd faad2-2_10_0
 
 ## Replace config.guess and config.sub
-cp ../config.guess ../config.sub .
+cp ../../assets/config.guess ../../assets/config.sub .
 
 NOCONFIGURE=1 ./bootstrap
 
